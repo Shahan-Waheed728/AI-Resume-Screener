@@ -1,42 +1,65 @@
 import numpy as np
 import pandas as pd
-import os
+import joblib
+import tensorflow as tf
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
 
-# Base paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-data_dir = os.path.join(BASE_DIR, "data")
-models_dir = os.path.join(BASE_DIR, "models")
+# ---------------------------
+# LOAD DATA
+# ---------------------------
+df = pd.read_csv("data/final_dataset.csv")
+print(f"Dataset loaded: {df.shape}")
 
-# Load data
-print("Loading data...")
-X = np.load(os.path.join(data_dir, "X_features.npy"))
+# ---------------------------
+# LOAD VECTORIZER
+# ---------------------------
+vectorizer = joblib.load("models/vectorizer.pkl")
 
-df = pd.read_csv(os.path.join(data_dir, "labeled_dataset.csv"))
-y = df["match_score"].values
+# ---------------------------
+# BUILD FEATURES
+# ---------------------------
+X = []
+y = []
 
-# Train-test split
+for i in range(len(df)):
+    resume = str(df.iloc[i]["resume_text"])
+    jd = str(df.iloc[i]["job_description"])
+
+    tfidf = vectorizer.transform([resume, jd])
+    cosine = cosine_similarity(tfidf[0], tfidf[1])[0][0]
+    features = np.hstack([tfidf.toarray().flatten(), cosine])
+
+    X.append(features)
+    # ✅ FIX: Target is cosine score (0.0 to 1.0) — NOT multiplied by 100
+    y.append(cosine)
+
+X = np.array(X)
+y = np.array(y)
+
+print(f"Feature matrix: {X.shape}")
+print(f"Target range: min={y.min():.3f}, max={y.max():.3f}, mean={y.mean():.3f}")
+
+# ---------------------------
+# TRAIN/TEST SPLIT
+# ---------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-print(f"Train shape: {X_train.shape}")
-print(f"Test shape: {X_test.shape}")
-
-# Build ANN model
-print("\nBuilding ANN model...")
-
-model = Sequential([
-    Dense(256, activation='relu', input_shape=(X.shape[1],)),
-    Dropout(0.3),
-    Dense(128, activation='relu'),
-    Dropout(0.3),
-    Dense(64, activation='relu'),
-    Dense(1)  # Regression output
+# ---------------------------
+# ANN MODEL
+# ✅ FIX: Output layer uses sigmoid — guarantees output between 0 and 1
+# ---------------------------
+model = tf.keras.Sequential([
+    tf.keras.Input(shape=(X.shape[1],)),
+    tf.keras.layers.Dense(256, activation='relu'),
+    tf.keras.layers.Dropout(0.3),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(64, activation='relu'),
+    # ✅ sigmoid ensures output is always between 0 and 1
+    tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
 model.compile(
@@ -45,38 +68,34 @@ model.compile(
     metrics=['mae']
 )
 
-# Early stopping
-early_stop = EarlyStopping(
-    monitor='val_loss',
-    patience=5,
-    restore_best_weights=True
-)
+model.summary()
 
-# Train
-print("\nTraining ANN...")
+# ---------------------------
+# TRAIN
+# ---------------------------
 history = model.fit(
     X_train, y_train,
-    validation_split=0.2,
-    epochs=50,
+    epochs=15,
     batch_size=32,
-    callbacks=[early_stop],
+    validation_data=(X_test, y_test),
     verbose=1
 )
 
-# Evaluate
-y_pred = model.predict(X_test)
+# ---------------------------
+# EVALUATE
+# ---------------------------
+loss, mae = model.evaluate(X_test, y_test, verbose=0)
+print(f"\n✅ Test Loss (MSE): {loss:.4f}")
+print(f"✅ Test MAE: {mae:.4f}")
 
-mse = mean_squared_error(y_test, y_pred)
-mae = mean_absolute_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
+# Verify output range
+sample_preds = model.predict(X_test[:5])
+print(f"\n✅ Sample predictions (should be 0.0 - 1.0):")
+for i, pred in enumerate(sample_preds):
+    print(f"  Sample {i+1}: {pred[0]:.4f} ({pred[0]*100:.2f}%)")
 
-print("\n📊 ANN Evaluation:")
-print(f"MSE: {mse:.4f}")
-print(f"MAE: {mae:.4f}")
-print(f"R² Score: {r2:.4f}")
-
-# Save model
-os.makedirs(models_dir, exist_ok=True)
-model.save(os.path.join(models_dir, "model_ann.h5"))
-
-print("\n✅ ANN model saved as model_ann.h5")
+# ---------------------------
+# SAVE
+# ---------------------------
+model.save("models/model_ann.h5")
+print("\n✅ ANN model saved to models/model_ann.h5")

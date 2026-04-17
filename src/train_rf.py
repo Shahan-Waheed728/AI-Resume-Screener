@@ -1,54 +1,63 @@
 import numpy as np
-import pickle
-import os
-from sklearn.model_selection import train_test_split
+import pandas as pd
+import joblib
+
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.model_selection import train_test_split
 
-# Base paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-data_dir = os.path.join(BASE_DIR, "data")
-models_dir = os.path.join(BASE_DIR, "models")
+# ---------------------------
+# LOAD DATA (FIXED)
+# ---------------------------
+df = pd.read_csv("data/final_dataset.csv")
 
-# Load data
-print("Loading data...")
-X = np.load(os.path.join(data_dir, "X_features.npy"))
-y = np.load(os.path.join(data_dir, "y_labels.npy"))
+# ---------------------------
+# CREATE COMBINED TEXT FOR FITTING
+# ---------------------------
+all_text = df["resume_text"] + " " + df["job_description"]
 
-# Train-test split
+# ---------------------------
+# FIT VECTORIZER ON FULL DATA (IMPORTANT)
+# ---------------------------
+vectorizer = TfidfVectorizer(max_features=5000)
+vectorizer.fit(all_text)
+
+# ---------------------------
+# BUILD FEATURES
+# ---------------------------
+X_features = []
+y = df["label"].values
+
+for i in range(len(df)):
+
+    resume = df.iloc[i]["resume_text"]
+    jd = df.iloc[i]["job_description"]
+
+    tfidf = vectorizer.transform([resume, jd])
+
+    cosine = cosine_similarity(tfidf[0], tfidf[1])[0][0]
+
+    features = np.hstack([tfidf.toarray().flatten(), cosine])
+
+    X_features.append(features)
+
+X = np.array(X_features)
+
+# ---------------------------
+# TRAIN MODEL
+# ---------------------------
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+    X, y, test_size=0.2, random_state=42
 )
 
-print(f"Train shape: {X_train.shape}")
-print(f"Test shape: {X_test.shape}")
+model = RandomForestClassifier(n_estimators=200, random_state=42)
+model.fit(X_train, y_train)
 
-# Model
-print("\nTraining Random Forest...")
-rf = RandomForestClassifier(
-    n_estimators=100,
-    max_depth=None,
-    random_state=42,
-    class_weight="balanced"
-)
+# ---------------------------
+# SAVE
+# ---------------------------
+joblib.dump(model, "models/model_rf.pkl")
+joblib.dump(vectorizer, "models/vectorizer.pkl")
 
-rf.fit(X_train, y_train)
-
-# Predictions
-y_pred = rf.predict(X_test)
-
-# Evaluation
-print("\n📊 Evaluation:")
-print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
-
-print("\nConfusion Matrix:")
-print(confusion_matrix(y_test, y_pred))
-
-# Save model
-os.makedirs(models_dir, exist_ok=True)
-with open(os.path.join(models_dir, "model_rf.pkl"), "wb") as f:
-    pickle.dump(rf, f)
-
-print("\n✅ Random Forest model saved as model_rf.pkl")
+print("✅ RF trained + saved")

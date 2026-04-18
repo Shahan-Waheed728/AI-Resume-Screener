@@ -6,13 +6,39 @@ import PyPDF2
 import docx
 from sklearn.metrics.pairwise import cosine_similarity
 import time
+import requests
+from datetime import datetime
+
+def send_to_n8n(candidate_name, rf_result,
+                ann_score, match_score, status):
+
+    webhook_url = "https://shahan-waheed728.app.n8n.cloud/webhook/e852e99d-9807-4559-81f7-3a919da2bd65"
+
+    payload = {
+        "candidate_name": candidate_name,
+        "rf_result": rf_result,
+        "ml_ann_score": round(float(ann_score), 2),
+        "ml_match_score": round(float(match_score), 2),
+        "ml_status": status,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    try:
+        response = requests.post(webhook_url, json=payload, timeout=5)
+
+        if response.status_code == 200:
+            st.toast("Sent to n8n (Google Sheets updated)")
+        else:
+            st.warning(f"⚠️ n8n error: {response.status_code}")
+
+    except Exception as e:
+        st.warning(f"⚠️ n8n failed: {str(e)}")
 
 # ---------------------------
 # PAGE CONFIG
 # ---------------------------
 st.set_page_config(
-    page_title="AI Resume Screener Pro",
-    page_icon="🎯",
+    page_title="AI Resume Screener Pro",   
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -244,12 +270,12 @@ def progress_bar(label, value_pct, fill_class):
 # SIDEBAR
 # ---------------------------
 with st.sidebar:
-    st.markdown('<p class="section-label">⚙️ Recruiter Settings</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-label">Recruiter Settings</p>', unsafe_allow_html=True)
     threshold = st.slider("Hire Threshold (%)", 0, 100, 60,
                           help="Candidates above this AI score will be shortlisted")
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
-    st.markdown('<p class="section-label">📊 Threshold Guide</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-label">Threshold Guide</p>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:0.82rem; color:#9ca3af; line-height:1.8;">
         🟢 <b style="color:#34d399">≥ threshold</b> — Hire / Shortlist<br>
@@ -259,7 +285,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
-    st.markdown('<p class="section-label">🤖 Models Active</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-label">Models Active</p>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:0.82rem; color:#9ca3af; line-height:1.8;">
         ✅ Random Forest (Classifier)<br>
@@ -287,7 +313,7 @@ col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown('<p class="section-label">📄 Candidate Resume</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-label">Candidate Resume</p>', unsafe_allow_html=True)
     file = st.file_uploader("Upload PDF or DOCX", type=["pdf", "docx"],
                              label_visibility="collapsed")
     if file:
@@ -296,7 +322,7 @@ with col1:
 
 with col2:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown('<p class="section-label">📝 Job Description</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-label">Job Description</p>', unsafe_allow_html=True)
     jd = st.text_area("Paste job description here", height=180,
                        placeholder="Paste the full job description here...",
                        label_visibility="collapsed")
@@ -307,7 +333,7 @@ with col2:
 # ---------------------------
 col_btn = st.columns([1, 2, 1])[1]
 with col_btn:
-    run = st.button("🚀 Run AI Screening", use_container_width=True)
+    run = st.button("Run AI Screening", use_container_width=True)
 
 # ---------------------------
 # ANALYSIS
@@ -328,7 +354,7 @@ if run:
             rf_label = "Qualified" if rf_pred == 1 else "Not Qualified"
             rf_proba = rf_model.predict_proba(X)[0][1] * 100
 
-            # ✅ ANN score — sigmoid output is already 0-1, multiply by 100
+            # ANN score — sigmoid output is already 0-1, multiply by 100
             ann_raw   = float(ann_model.predict(X, verbose=0)[0][0])
             ann_score = max(0.0, min(100.0, ann_raw * 100))  # Clamp 0-100
  
@@ -337,7 +363,7 @@ if run:
 
             # Cosine match score
             match_pct = cosine * 100
-        # ✅ Combined scoring — more reliable decision
+        #   Combined scoring — more reliable decision
             combined_score = (match_pct * 0.7) + (ann_score * 0.2) + (rf_proba * 0.1)
 
             if combined_score >= threshold:
@@ -355,9 +381,25 @@ if run:
                 badge_class = "badge-reject"
                 score_class = "score-red"
                 fill_class  = "fill-red"
+               # ---------------------------
+               # SEND TO n8n (AFTER DECISION)
+               # ---------------------------
+                candidate_name = file.name if file else "Unknown"
 
+                # optional: clean status text
+                status_clean = status.replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
+
+                # send only meaningful results (recommended)
+                if combined_score >= 40:
+                    send_to_n8n(
+                        candidate_name,
+                        rf_label,
+                        ann_score,
+                        combined_score,
+                        status_clean
+                    )
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
-        st.markdown('<p class="section-label">📊 Candidate Analysis Dashboard</p>',
+        st.markdown('<p class="section-label">Candidate Analysis Dashboard</p>',
                     unsafe_allow_html=True)
 
         # ── Metric Cards ──
@@ -374,7 +416,7 @@ if run:
         with c2:
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-label">🧠 AI Score</div>
+                <div class="metric-label">AI Score</div>
                 <div class="metric-value {score_class}">{ann_score:.1f}%</div>
                 <div class="metric-sub">ANN Confidence</div>
             </div>""", unsafe_allow_html=True)
@@ -382,7 +424,7 @@ if run:
         with c3:
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-label">🌲 RF Score</div>
+                <div class="metric-label">RF Score</div>
                 <div class="metric-value score-blue">{rf_proba:.1f}%</div>
                 <div class="metric-sub">Random Forest</div>
             </div>""", unsafe_allow_html=True)
@@ -390,7 +432,7 @@ if run:
         with c4:
             st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-label">🤖 Decision</div>
+                <div class="metric-label">Decision</div>
                 <div style="margin-top:0.6rem">
                     <span class="status-badge {badge_class}">{status}</span>
                 </div>
@@ -404,7 +446,7 @@ if run:
 
         with col_left:
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown('<p class="section-label">📈 Score Breakdown</p>',
+            st.markdown('<p class="section-label">Score Breakdown</p>',
                         unsafe_allow_html=True)
             st.markdown(progress_bar("Cosine Match Score", match_pct, "fill-blue"),
                         unsafe_allow_html=True)
@@ -418,7 +460,7 @@ if run:
 
         with col_right:
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown('<p class="section-label">🧾 Decision Summary</p>',
+            st.markdown('<p class="section-label">Decision Summary</p>',
                         unsafe_allow_html=True)
             st.markdown(f"""
             <div style="font-size:0.9rem; color:#9ca3af; line-height:2.2;">
@@ -433,4 +475,4 @@ if run:
             st.markdown('</div>', unsafe_allow_html=True)
 
     else:
-        st.error("⚠️ Please upload a resume AND paste a job description before screening.")
+        st.error("Please upload a resume AND paste a job description before screening.")

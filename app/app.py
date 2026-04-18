@@ -337,23 +337,24 @@ if run:
 
             # Cosine match score
             match_pct = cosine * 100
+        # ✅ Combined scoring — more reliable decision
+            combined_score = (match_pct * 0.7) + (ann_score * 0.2) + (rf_proba * 0.1)
 
-            # Status decision
-            if ann_score >= threshold:
-                status       = "HIRE / SHORTLIST"
-                badge_class  = "badge-hire"
-                score_class  = "score-green"
-                fill_class   = "fill-green"
-            elif ann_score >= 40:
-                status       = "NEEDS REVIEW"
-                badge_class  = "badge-review"
-                score_class  = "score-yellow"
-                fill_class   = "fill-yellow"
+            if combined_score >= threshold:
+                status      = "✅ HIRE / SHORTLIST"
+                badge_class = "badge-hire"
+                score_class = "score-green"
+                fill_class  = "fill-green"
+            elif combined_score >= 40:
+                status      = "⚠️ UNDER CONSIDERATION"
+                badge_class = "badge-review"
+                score_class = "score-yellow"
+                fill_class  = "fill-yellow"
             else:
-                status       = "REJECT"
-                badge_class  = "badge-reject"
-                score_class  = "score-red"
-                fill_class   = "fill-red"
+                status      = "❌ REJECT"
+                badge_class = "badge-reject"
+                score_class = "score-red"
+                fill_class  = "fill-red"
 
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
         st.markdown('<p class="section-label">📊 Candidate Analysis Dashboard</p>',

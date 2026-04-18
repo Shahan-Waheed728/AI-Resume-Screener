@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import numpy as np
 import joblib
 import tensorflow as tf
@@ -7,6 +8,7 @@ import docx
 from sklearn.metrics.pairwise import cosine_similarity
 import time
 import requests
+import gdown
 from datetime import datetime
 
 def send_to_n8n(candidate_name, rf_result,
@@ -220,12 +222,39 @@ st.markdown("""
 # ---------------------------
 # LOAD MODELS
 # ---------------------------
+# ---------------------------
+# GOOGLE DRIVE MODEL LOADING
+# ---------------------------
+RF_MODEL_ID = "1TKgWtF8cTIj-WJJATxpWx-DQOyFAwOUy"
+ANN_MODEL_ID = "1_0JEBm9b9o1RHWTKdt84gI4-ncXBcyVL"
+TFIDF_ID = "1fY1l2Q4B-4d0yPeV1p35Q0FJoPrMXkmk"
+VECTORIZER_ID = "1wanY6PX0yBqAiYW3voB-cY3RK-zsHcbh"
+
+def download_from_drive(file_id, output_path):
+    if not os.path.exists(output_path):
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, output_path, quiet=False)
+
 @st.cache_resource
 def load_models():
-    rf_model  = joblib.load("models/model_rf.pkl")
-    ann_model = tf.keras.models.load_model("models/model_ann.h5", compile=False)
-    vectorizer = joblib.load("models/vectorizer.pkl")
+
+    rf_path = "models/model_rf.pkl"
+    ann_path = "models/model_ann.h5"
+    tfidf_path = "models/tfidf_vectorizer.pkl"
+    vec_path = "models/vectorizer.pkl"
+
+    download_from_drive(RF_MODEL_ID, rf_path)
+    download_from_drive(ANN_MODEL_ID, ann_path)
+    download_from_drive(TFIDF_ID, tfidf_path)
+    download_from_drive(VECTORIZER_ID, vec_path)
+
+    rf_model = joblib.load(rf_path)
+    ann_model = tf.keras.models.load_model(ann_path, compile=False)
+    vectorizer = joblib.load(vec_path)
+
     return rf_model, ann_model, vectorizer
+
 
 rf_model, ann_model, vectorizer = load_models()
 

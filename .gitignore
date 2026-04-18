@@ -209,6 +209,8 @@ __marimo__/
 # Data files (large datasets)
 data/
 *.csv
+data/X_features.npy
+data/y_labels.npy
 
 # Model files
 models/
@@ -220,3 +222,8 @@ models/
 
 # VS Code (optional)
 .vscode/
+
+
+
+
+

@@ -22,9 +22,9 @@ def send_to_n8n(candidate_name, rf_result,
         "ml_status": status,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-
+    
     try:
-        response = requests.post(webhook_url, json=payload, timeout=5)
+        response = requests.post(webhook_url, json=payload, timeout=5)        
 
         if response.status_code == 200:
             st.toast("Sent to n8n (Google Sheets updated)")
@@ -381,23 +381,23 @@ if run:
                 badge_class = "badge-reject"
                 score_class = "score-red"
                 fill_class  = "fill-red"
-               # ---------------------------
-               # SEND TO n8n (AFTER DECISION)
-               # ---------------------------
-                candidate_name = file.name if file else "Unknown"
+            # ---------------------------
+            # SEND TO n8n (AFTER DECISION)
+            # ---------------------------
+            candidate_name = file.name if file else "Unknown"
 
-                # optional: clean status text
-                status_clean = status.replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
+            # optional: clean status text
+            status_clean = status.replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
 
-                # send only meaningful results (recommended)
-                if combined_score >= 40:
-                    send_to_n8n(
-                        candidate_name,
-                        rf_label,
-                        ann_score,
-                        combined_score,
-                        status_clean
-                    )
+            # send only meaningful results (recommended)
+            if combined_score >= 40:
+                send_to_n8n(
+                    candidate_name,
+                    rf_label,
+                    ann_score,
+                    combined_score,
+                    status_clean
+                )
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
         st.markdown('<p class="section-label">Candidate Analysis Dashboard</p>',
                     unsafe_allow_html=True)

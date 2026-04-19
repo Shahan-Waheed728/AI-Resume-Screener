@@ -212,8 +212,7 @@ After processing, you will see:
 
 - **Deployed App:** https://ai-resume-screener-drymmejxbnd7uguuztxwpt.streamlit.app  
 - **GitHub Repo:** https://github.com/Shahan-Waheed728/AI-Resume-Screener  
-- **Medium Article:** (Add your link here)  
-- **LinkedIn:** (Add your profile link)
+- **Medium Article:** https://medium.com/p/8ea9a343607e?postPublishedType=initial  
 
 ---
 

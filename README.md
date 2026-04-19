@@ -1,6 +1,48 @@
-# AI Resume Screener & Job Matcher
+# AI Resume Screener & Job Matcher 
 
 An end-to-end **AI-powered recruitment system** that screens resumes, ranks candidates, and triggers automated hiring workflows using **Machine Learning, Deep Learning, and n8n automation**.
+
+---
+
+## Overview
+
+Hiring teams deal with hundreds of resumes for every job posting. Manual screening is slow, biased, and inefficient.
+
+This project solves this with a **dual-pipeline AI system** that:
+- Screens resumes instantly
+- Scores candidates using ML + Deep Learning
+- Automates evaluation using AI workflows
+- Logs results in real-time for recruiters
+
+---
+
+## Workflow
+
+1. Upload resume and job description  
+2. Apply NLP preprocessing  
+3. Extract features using TF-IDF  
+4. Evaluate using:
+   - Random Forest (classification)
+   - ANN (match scoring)
+5. Generate final decision  
+6. Trigger n8n workflow  
+7. AI evaluation and summarization  
+8. Store results in Google Sheets  
+
+---
+
+## Key Features
+
+- Resume parsing (PDF & DOCX)
+- NLP preprocessing (tokenization, stopword removal, lemmatization)
+- TF-IDF + cosine similarity matching
+- Random Forest classifier (~90% accuracy)
+- ANN match scoring (0–100%)
+- Adjustable hiring threshold
+- n8n automation workflow
+- AI-powered evaluation using GPT
+- Google Sheets logging
+- Streamlit deployment
 
 ---
 
@@ -20,104 +62,24 @@ An end-to-end **AI-powered recruitment system** that screens resumes, ranks cand
 
 ---
 
-## Live Demo & Links
-
-* **Deployed App:** https://ai-resume-screener-drymmejxbnd7uguuztxwpt.streamlit.app
-* **GitHub Repo:** [https://github.com/Shahan-Waheed728/AI-Resume-Screener](https://github.com/Shahan-Waheed728/AI-Resume-Screener)
-* **Medium Article:** How I Built an AI Resume Screener
-* **LinkedIn:** Shahan Waheed
-
----
-
-## Quick Test Guide (For Evaluators)
-
-Follow these steps to test the system in **under 2 minutes**:
-
-### 🪜 Steps
-
-| Step | Action | What to Do |
-|------|--------|-----------|
-| 1️⃣ | Open App | Visit the deployed app link |
-| 2️⃣ | Download Resume | Click **"Download Sample Resumes"** inside the app |
-| 3️⃣ | Load Job Description | Select from **"Sample Job Descriptions"** dropdown |
-| 4️⃣ | Run Screening | Upload resume → Click **"Run AI Screening"** |
-
----
-
-### Expected Results
-
-| Resume File | Job Role | Expected Output |
-|------------|---------|----------------|
-| Resume_HR_Fatima_Khan | HR Manager | ✅ HIRE |
-| Resume_Finance_Omar_Sheikh | Finance Analyst | ⚠️ UNDER CONSIDERATION |
-| Resume_Software_Ali_Hassan | Software Engineer | ⚠️ UNDER CONSIDERATION |
-| Resume_Chef_Usman_Tariq | Tech/Finance JD | ❌ REJECT |
-
-**Note:** Default threshold is **60%**. You can adjust it using the sidebar slider.
-
----
-
-
-## Project Overview
-
-Hiring teams deal with hundreds of resumes for every job posting. Manual screening is slow, biased, and inefficient. This project solves this with a **dual-pipeline AI system** that screens candidates instantly and logs all results automatically.
-
----
-
-## Features
-
-* Resume parsing — supports PDF and DOCX formats
-* NLP pipeline — tokenization, stopword removal, lemmatization
-* TF-IDF vectorization with cosine similarity matching
-* Random Forest classifier — Qualified / Not Qualified (~90% accuracy)
-* ANN match scorer — candidate match score (0–100%)
-* Adjustable hire threshold via recruiter sidebar
-* n8n automation — GPT-powered candidate profiling workflow
-* Google Sheets logging — real-time results tracking
-* Deployed on Streamlit Cloud
-
----
-
-## Model Performance
-
-### Random Forest Classifier
-
-| Metric     | Score         |
-| ---------- | ------------- |
-| Accuracy   | 89.92%        |
-| Precision  | 82.89%        |
-| Recall     | 82.35%        |
-| F1 Score   | 82.62%        |
-| CV Mean F1 | 81.89% ± 2.6% |
-
-### ANN Model (Match Scorer)
-
-* Architecture: 512 → 256 → 128 → 64 → 1
-* Activation: Sigmoid (0–1)
-* Loss: Binary Crossentropy
-* Optimizer: Adam (lr=0.001)
-* Regularization: BatchNorm + Dropout
-
-> Note: ANN works as a regression-style scorer producing a continuous match percentage.
-
----
-
 ## Tech Stack
 
-* **Language:** Python 3
-* **ML:** Scikit-learn (Random Forest)
-* **Deep Learning:** TensorFlow / Keras
-* **NLP:** NLTK, TF-IDF, Cosine Similarity
-* **Frontend:** Streamlit
-* **Automation:** n8n
-* **AI:** OpenAI GPT-4o-mini
-* **Storage:** Google Sheets, Google Drive
-* **Version Control:** Git + GitHub
+| Category | Technology |
+|----------|-----------|
+| Language | Python |
+| ML | Scikit-learn |
+| Deep Learning | TensorFlow / Keras |
+| NLP | NLTK, TF-IDF |
+| Frontend | Streamlit |
+| Automation | n8n |
+| AI | OpenAI GPT-4o-mini |
+| Storage | Google Sheets, Drive |
+| Version Control | GitHub |
 
 ---
 
 ## Project Structure
-
+```bash
 AI-Resume-Screener/
 ├── app/
 │   └── app.py                  Streamlit web application
@@ -149,30 +111,134 @@ AI-Resume-Screener/
 ├── requirements.txt
 └── README.md
 ```
+---
+
+
+## Quick Test Guide (For Evaluators)
+
+### Steps
+
+| Step | Action | What to Do |
+|------|--------|-----------|
+| 1️⃣ | Open App | Visit deployed app |
+| 2️⃣ | Download Resume | Use sample resumes in app |
+| 3️⃣ | Load JD | Select from sample JD dropdown |
+| 4️⃣ | Run Screening | Upload resume → Click "Run AI Screening" |
+
+### Expected Results
+
+| Resume File | Job Role | Expected Output |
+|------------|---------|----------------|
+| Resume_HR_Fatima_Khan | HR Manager | ✅ HIRE |
+| Resume_Finance_Omar_Sheikh | Finance Analyst | ⚠️ UNDER CONSIDERATION |
+| Resume_Software_Ali_Hassan | Software Engineer | ⚠️ UNDER CONSIDERATION |
+| Resume_Chef_Usman_Tariq | Tech/Finance JD | ❌ REJECT |
+
+**Note:** Default threshold = 60%
 
 ---
 
-## ▶Run Locally
+## Local Setup Instructions
 
 ```bash
 git clone https://github.com/Shahan-Waheed728/AI-Resume-Screener.git
 cd AI-Resume-Screener
 
 python -m venv venv
-venv\\Scripts\\activate
+venv\Scripts\activate
 
 pip install -r requirements.txt
 
 streamlit run app/app.py
 ```
+---
+
+## Usage Guide
+
+### Steps to Use
+
+1. Open the application  
+2. Upload a resume (**PDF/DOCX**)  
+3. Paste or select a job description  
+4. Click **Run AI Screening**  
+
+### Output
+
+After processing, you will see:
+- **Match Score**
+- **AI Evaluation**
+- **Final Decision**
+
+---
+
+## Deployment (Streamlit)
+
+### Steps
+
+1. Push your code to GitHub  
+2. Go to https://share.streamlit.io  
+3. Connect your repository  
+4. Set the main file path: 
+   app/app.py 
+5. Add environment variable:
+   N8N_WEBHOOK_URL = https://shahan-waheed728.app.n8n.cloud/webhook/e852e99d-9807-4559-81f7-3a919da2bd65
+6. Click **Deploy**
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|------|---------|
+| App not loading | Check Streamlit logs |
+| Model not found | Ensure model files exist |
+| NLTK error | Run nltk downloads |
+| n8n not working | Verify webhook URL |
+
+---
+
+## Future Enhancements
+
+- BERT embeddings for better semantic matching  
+- Named Entity Recognition (NER) for skill extraction  
+- Real-time job scraping integration  
+- Recruiter feedback loop  
+- Multi-language support  
+- Interview prediction system  
+
+---
+
+## 🔗 Live Demo & Links
+
+- **Deployed App:** https://ai-resume-screener-drymmejxbnd7uguuztxwpt.streamlit.app  
+- **GitHub Repo:** https://github.com/Shahan-Waheed728/AI-Resume-Screener  
+- **Medium Article:** (Add your link here)  
+- **LinkedIn:** (Add your profile link)
+
+---
+
+## Disclaimer
+
+This project was developed as a **final project for an AI/ML Fellowship** and was completed as a **solo project**.
+
+It is intended for **educational and demonstration purposes only**. The system is not designed to replace human judgment in real-world hiring decisions and should not be used as the sole evaluation tool for candidates.
+
+---
+
+## Acknowledgement
+
+- Open-source community  
+- Scikit-learn & TensorFlow contributors  
+- n8n platform  
+- Dataset providers  
 
 ---
 
 ## Author
 
-**Shahan Waheed**
-Software Engineering Student (7th Semester)
-COMSATS University Attock
+**Shahan Waheed**  
+Software Engineering Student (7th Semester)  
+COMSATS University Attock  
 
 ---
 

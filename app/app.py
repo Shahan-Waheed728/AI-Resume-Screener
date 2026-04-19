@@ -49,7 +49,6 @@ class SimpleANN:
     def predict(self, X):
         out = X.astype(np.float32)
         dense_layers = []
-        # Extract only Dense layer weights (2D weight + 1D bias pairs)
         i = 0
         while i < len(self.weights):
             if self.weights[i].ndim == 2:
@@ -57,7 +56,6 @@ class SimpleANN:
                 i += 2
             else:
                 i += 1
-        # Forward pass
         for idx, (w, b) in enumerate(dense_layers):
             out = out @ w + b
             if idx < len(dense_layers) - 1:
@@ -176,10 +174,10 @@ st.markdown("""
 # ---------------------------
 # GOOGLE DRIVE MODEL IDs
 # ---------------------------
-RF_MODEL_ID   = "1TKgWtF8cTIj-WJJATxpWx-DQOyFAwOUy"
-TFIDF_ID      = "1fY1l2Q4B-4d0yPeV1p35Q0FJoPrMXkmk"
-VECTORIZER_ID = "1wanY6PX0yBqAiYW3voB-cY3RK-zsHcbh"
-ANN_WEIGHTS_ID = "1KZUsGCPrpa0jYOY_6kMrlJqVeNCRcW1E"  
+RF_MODEL_ID    = "1TKgWtF8cTIj-WJJATxpWx-DQOyFAwOUy"
+TFIDF_ID       = "1fY1l2Q4B-4d0yPeV1p35Q0FJoPrMXkmk"
+VECTORIZER_ID  = "1wanY6PX0yBqAiYW3voB-cY3RK-zsHcbh"
+ANN_WEIGHTS_ID = "1KZUsGCPrpa0jYOY_6kMrlJqVeNCRcW1E"
  
 def download_from_drive(file_id, output_path):
     if not os.path.exists(output_path):
@@ -189,9 +187,9 @@ def download_from_drive(file_id, output_path):
  
 @st.cache_resource
 def load_models():
-    rf_path    = "models/model_rf.pkl"
-    vec_path   = "models/vectorizer.pkl"
-    ann_path   = "models/ann_weights.npy"
+    rf_path  = "models/model_rf.pkl"
+    vec_path = "models/vectorizer.pkl"
+    ann_path = "models/ann_weights.npy"
  
     download_from_drive(RF_MODEL_ID,    rf_path)
     download_from_drive(VECTORIZER_ID,  vec_path)
@@ -300,30 +298,48 @@ if run:
             resume = read_pdf(file) if file.name.endswith(".pdf") else read_docx(file)
             X, cosine = build_features(resume, jd)
  
+            # ── Random Forest ──
             rf_pred  = rf_model.predict(X)[0]
             rf_label = "Qualified" if rf_pred == 1 else "Not Qualified"
             rf_proba = rf_model.predict_proba(X)[0][1] * 100
  
+            # ── ANN Score ──
             try:
                 ann_raw   = float(ann_model.predict(X.astype(np.float32))[0][0])
                 ann_score = max(0.0, min(100.0, ann_raw * 100))
             except Exception:
-                ann_score = rf_proba  # Fallback to RF if ANN fails
+                ann_score = rf_proba
  
-            match_pct      = cosine * 100
-            combined_score = (match_pct * 0.7) + (ann_score * 0.2) + (rf_proba * 0.1)
+            # ── Scores ──
+            match_pct = cosine * 100
  
-            if combined_score >= threshold:
-                status = "✅ HIRE / SHORTLIST"; badge_class = "badge-hire"; score_class = "score-green"; fill_class = "fill-green"
-            elif combined_score >= 40:
-                status = "⚠️ UNDER CONSIDERATION"; badge_class = "badge-review"; score_class = "score-yellow"; fill_class = "fill-yellow"
+            # ✅ Cosine similarity is primary decision score
+            # Most reliable — directly measures resume vs JD text match
+            decision_score = match_pct
+ 
+            # ── Decision Logic ──
+            if decision_score >= threshold:
+                status      = "✅ HIRE / SHORTLIST"
+                badge_class = "badge-hire"
+                score_class = "score-green"
+                fill_class  = "fill-green"
+            elif decision_score >= 40:
+                status      = "⚠️ UNDER CONSIDERATION"
+                badge_class = "badge-review"
+                score_class = "score-yellow"
+                fill_class  = "fill-yellow"
             else:
-                status = "❌ REJECT"; badge_class = "badge-reject"; score_class = "score-red"; fill_class = "fill-red"
+                status      = "❌ REJECT"
+                badge_class = "badge-reject"
+                score_class = "score-red"
+                fill_class  = "fill-red"
  
+            # ── Send to n8n ──
             status_clean = status.replace("✅","").replace("⚠️","").replace("❌","").strip()
-            if combined_score >= 40:
-                send_to_n8n(file.name, rf_label, ann_score, combined_score, status_clean)
+            if decision_score >= 40:
+                send_to_n8n(file.name, rf_label, ann_score, match_pct, status_clean)
  
+        # ── Dashboard ──
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
         st.markdown('<p class="section-label">Candidate Analysis Dashboard</p>', unsafe_allow_html=True)
  

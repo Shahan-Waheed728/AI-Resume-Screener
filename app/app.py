@@ -96,7 +96,7 @@ st.markdown("""
     html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
     .main { background-color: #080c14; }
     .block-container { padding-top: 1.5rem; padding-bottom: 2rem; }
-    #MainMenu, footer, header { visibility: hidden; }
+    #MainMenu, footer { visibility: hidden; }
     .hero-wrap { text-align: center; padding: 2rem 0 1rem; }
     .hero-title {
         font-family: 'Syne', sans-serif;

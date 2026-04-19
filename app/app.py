@@ -34,7 +34,6 @@ def send_to_n8n(candidate_name, rf_result, ann_score, match_score, status):
  
 # ---------------------------
 # ANN INFERENCE (No TensorFlow!)
-# Pure numpy forward pass
 # ---------------------------
 class SimpleANN:
     def __init__(self, weights):
@@ -63,6 +62,21 @@ class SimpleANN:
             else:
                 out = self.sigmoid(out)
         return out
+ 
+# ---------------------------
+# SAMPLE JOB DESCRIPTIONS
+# ---------------------------
+SAMPLE_JDS = {
+    "Select a sample JD...": "",
+ 
+    "HR Manager (Expected: HIRE)": """We are seeking an experienced HR Specialist with expertise in talent acquisition, recruitment, employee relations, and HR operations. The ideal candidate should have experience managing full-cycle recruitment, onboarding programs, payroll administration using SAP HR, and performance management systems. Knowledge of labor laws, compensation and benefits, HRIS tools, and employee engagement programs is required. MBA in Human Resource Management preferred with minimum 3 years of relevant HR experience.""",
+ 
+    "Software Engineer (Expected: CONSIDERATION)": """We are looking for a Software Engineer with strong Python skills and experience in machine learning, deep learning, and NLP. The candidate should have experience with TensorFlow, Scikit-learn, REST APIs, Flask or FastAPI, and model deployment. Experience with TF-IDF, text classification, sentiment analysis, and building Streamlit applications is a plus. Must know Git, Docker, and cloud deployment on AWS or Azure. Strong understanding of data preprocessing, feature engineering, and model evaluation metrics required.""",
+ 
+    "Finance Analyst (Expected: CONSIDERATION)": """We are hiring a Senior Finance Analyst with strong background in financial analysis, budgeting, forecasting, and financial reporting. The candidate must have expertise in IFRS standards, auditing, taxation, and ERP systems like SAP. Experience with accounts payable receivable, cost accounting, risk management, and preparing board-level financial presentations is required. CA or CMA qualification preferred with minimum 4 years of experience in finance or accounting role.""",
+ 
+    "Chef Position (Expected: REJECT)": """We are looking for a Head Chef with culinary arts degree and 5 years experience in Pakistani, Continental and Italian cuisine, menu planning, kitchen management, food safety regulations, team leadership, and banquet management. HACCP certification required. Experience in high-volume restaurant environment essential.""",
+}
  
 # ---------------------------
 # PAGE CONFIG
@@ -168,6 +182,7 @@ st.markdown("""
         border-radius: 12px !important;
         background: rgba(77,163,255,0.03) !important;
     }
+    .download-btn { margin: 4px 0; }
 </style>
 """, unsafe_allow_html=True)
  
@@ -190,16 +205,13 @@ def load_models():
     rf_path  = "models/model_rf.pkl"
     vec_path = "models/vectorizer.pkl"
     ann_path = "models/ann_weights.npy"
- 
     download_from_drive(RF_MODEL_ID,    rf_path)
     download_from_drive(VECTORIZER_ID,  vec_path)
     download_from_drive(ANN_WEIGHTS_ID, ann_path)
- 
     rf_model   = joblib.load(rf_path)
     vectorizer = joblib.load(vec_path)
     weights    = list(np.load(ann_path, allow_pickle=True))
     ann_model  = SimpleANN(weights)
- 
     return rf_model, ann_model, vectorizer
  
 rf_model, ann_model, vectorizer = load_models()
@@ -238,6 +250,7 @@ with st.sidebar:
     st.markdown('<p class="section-label">Recruiter Settings</p>', unsafe_allow_html=True)
     threshold = st.slider("Hire Threshold (%)", 0, 100, 60)
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
+ 
     st.markdown('<p class="section-label">Threshold Guide</p>', unsafe_allow_html=True)
     st.markdown("""
     <div style="font-size:0.82rem; color:#9ca3af; line-height:1.8;">
@@ -245,6 +258,20 @@ with st.sidebar:
         🟡 <b style="color:#fbbf24">≥ 40%</b> — Review<br>
         🔴 <b style="color:#f87171">< 40%</b> — Reject
     </div>""", unsafe_allow_html=True)
+    st.markdown('<hr class="divider">', unsafe_allow_html=True)
+ 
+    # ── Sample JD Selector ──
+    st.markdown('<p class="section-label">Sample Job Descriptions</p>', unsafe_allow_html=True)
+    selected = st.selectbox(
+        "Load a sample JD",
+        list(SAMPLE_JDS.keys()),
+        label_visibility="collapsed"
+    )
+    if selected != "Select a sample JD..." and SAMPLE_JDS[selected]:
+        if st.button("Load this JD", use_container_width=True):
+            st.session_state["loaded_jd"] = SAMPLE_JDS[selected]
+            st.success("JD loaded! Scroll down to see it.")
+ 
     st.markdown('<hr class="divider">', unsafe_allow_html=True)
     st.markdown('<p class="section-label">Models Active</p>', unsafe_allow_html=True)
     st.markdown("""
@@ -265,13 +292,50 @@ st.markdown("""
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
  
 # ---------------------------
-# INPUT
+# SAMPLE RESUME DOWNLOADS
+# ---------------------------
+with st.expander("Download Sample Resumes for Testing", expanded=False):
+    st.markdown("""
+    <div style="font-size:0.85rem; color:#9ca3af; margin-bottom:1rem;">
+        Download a sample resume below, then upload it in the section above to test the system.
+        Each resume is paired with a matching sample JD available in the sidebar.
+    </div>""", unsafe_allow_html=True)
+ 
+    dc1, dc2, dc3, dc4 = st.columns(4)
+ 
+    sample_files = {
+        dc1: ("HR Resume\n(Expected: HIRE)", "samples/Resume_HRSpecialist_Fatima_Khan.docx", "Resume_HR_Fatima_Khan.docx"),
+        dc2: ("Finance Resume\n(Expected: CONSIDERATION)", "samples/Resume_FinanceAnalyst_Omar_Sheikh.docx", "Resume_Finance_Omar_Sheikh.docx"),
+        dc3: ("Software Resume\n(Expected: CONSIDERATION)", "samples/Resume_SoftwareEngineer_Ali_Hassan.docx", "Resume_Software_Ali_Hassan.docx"),
+        dc4: ("Chef Resume\n(Expected: REJECT)", "samples/Resume_Chef_Usman_Tariq.docx", "Resume_Chef_Usman_Tariq.docx"),
+    }
+ 
+    for col, (label, path, filename) in sample_files.items():
+        with col:
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    st.download_button(
+                        label=label,
+                        data=f,
+                        file_name=filename,
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True
+                    )
+            else:
+                st.info(f"Upload {filename} to samples/ folder")
+ 
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
+ 
+# ---------------------------
+# INPUT SECTION
 # ---------------------------
 col1, col2 = st.columns([1, 1], gap="large")
+ 
 with col1:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown('<p class="section-label">Candidate Resume</p>', unsafe_allow_html=True)
-    file = st.file_uploader("Upload PDF or DOCX", type=["pdf", "docx"], label_visibility="collapsed")
+    file = st.file_uploader("Upload PDF or DOCX", type=["pdf", "docx"],
+                             label_visibility="collapsed")
     if file:
         st.success(f"✅ {file.name} uploaded successfully")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -279,11 +343,22 @@ with col1:
 with col2:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown('<p class="section-label">Job Description</p>', unsafe_allow_html=True)
-    jd = st.text_area("Paste job description here", height=180,
-                       placeholder="Paste the full job description here...",
-                       label_visibility="collapsed")
+    # ✅ Load from session state if JD was loaded from sidebar
+    default_jd = st.session_state.get("loaded_jd", "")
+    jd = st.text_area(
+        "Paste job description here",
+        height=180,
+        value=default_jd,
+        placeholder="Paste the full job description here, or load a sample from the sidebar...",
+        label_visibility="collapsed"
+    )
+    if default_jd:
+        st.caption("✅ Sample JD loaded from sidebar")
     st.markdown('</div>', unsafe_allow_html=True)
  
+# ---------------------------
+# ANALYZE BUTTON
+# ---------------------------
 col_btn = st.columns([1, 2, 1])[1]
 with col_btn:
     run = st.button("Run AI Screening", use_container_width=True)
@@ -298,48 +373,30 @@ if run:
             resume = read_pdf(file) if file.name.endswith(".pdf") else read_docx(file)
             X, cosine = build_features(resume, jd)
  
-            # ── Random Forest ──
             rf_pred  = rf_model.predict(X)[0]
             rf_label = "Qualified" if rf_pred == 1 else "Not Qualified"
             rf_proba = rf_model.predict_proba(X)[0][1] * 100
  
-            # ── ANN Score ──
             try:
                 ann_raw   = float(ann_model.predict(X.astype(np.float32))[0][0])
                 ann_score = max(0.0, min(100.0, ann_raw * 100))
             except Exception:
                 ann_score = rf_proba
  
-            # ── Scores ──
-            match_pct = cosine * 100
+            match_pct      = cosine * 100
+            decision_score = match_pct  # Cosine is primary decision score
  
-            # ✅ Cosine similarity is primary decision score
-            # Most reliable — directly measures resume vs JD text match
-            decision_score = match_pct
- 
-            # ── Decision Logic ──
             if decision_score >= threshold:
-                status      = "✅ HIRE / SHORTLIST"
-                badge_class = "badge-hire"
-                score_class = "score-green"
-                fill_class  = "fill-green"
+                status = "✅ HIRE / SHORTLIST"; badge_class = "badge-hire"; score_class = "score-green"; fill_class = "fill-green"
             elif decision_score >= 40:
-                status      = "⚠️ UNDER CONSIDERATION"
-                badge_class = "badge-review"
-                score_class = "score-yellow"
-                fill_class  = "fill-yellow"
+                status = "⚠️ UNDER CONSIDERATION"; badge_class = "badge-review"; score_class = "score-yellow"; fill_class = "fill-yellow"
             else:
-                status      = "❌ REJECT"
-                badge_class = "badge-reject"
-                score_class = "score-red"
-                fill_class  = "fill-red"
+                status = "❌ REJECT"; badge_class = "badge-reject"; score_class = "score-red"; fill_class = "fill-red"
  
-            # ── Send to n8n ──
             status_clean = status.replace("✅","").replace("⚠️","").replace("❌","").strip()
             if decision_score >= 40:
                 send_to_n8n(file.name, rf_label, ann_score, match_pct, status_clean)
  
-        # ── Dashboard ──
         st.markdown('<hr class="divider">', unsafe_allow_html=True)
         st.markdown('<p class="section-label">Candidate Analysis Dashboard</p>', unsafe_allow_html=True)
  
@@ -380,3 +437,4 @@ if run:
             st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.error("Please upload a resume AND paste a job description before screening.")
+ 

@@ -474,16 +474,16 @@
             "Job Code": "={{ $('On form submits Account Assistent').item.json['hdn-job-code'] }}",
             "Applicant Name": "={{ $('On form submits Account Assistent').item.json['First Name'] }}{{ $('On form submits Account Assistent').item.json['Last Name'] }}",
             "Applicant Email": "={{ $('On form submits Account Assistent').item.json.Email }}",
-            "Application Date": "={{ $('On form submits Account Assistent').item.json.submittedAt.toDateTime().format('yyyy-MM-dd') }}.",
-            "Final Score": "={{ $json.output.ai_resume_score }}",
+            "Application Date": "={{ $('On form submits Account Assistent').item.json.submittedAt.toDateTime().format('yyyy-MM-dd') }}",
+            "Final Score": "={{ $('Evaluate & Score Profile').item.json.output.ai_resume_score }}",
             "AI Status": "={{ $json.ai_status }}",
             "AI Assessment": "={{ $json.output.ai_evaluations }}",
             "Total Experience": "={{ $('Merge').item.json.output['Total Year Experience'] }}",
             "Experience Summary": "={{ $('Merge').item.json.output.Experience }}",
-            "Skills": "={{ $('Merge').item.json.output.Skills }}",
             "Job History": "={{ $('Merge').item.json.output['Job History'] }}",
-            "Applicant Phone": "={{ $('Merge').item.json.output.telephone }}",
+            "Skills": "={{ $('Merge').item.json.output.Skills }}",
             "Applicant Location": "={{ $('Merge').item.json.output.city }}",
+            "Applicant Phone": "={{ $('Merge').item.json.output.telephone }}",
             "Applicant Education": "={{ $('Merge').item.json.output['Educational qualification'] }}"
           },
           "matchingColumns": [],
@@ -495,27 +495,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Hiring Manager",
-              "displayName": "Hiring Manager",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
               "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Hiring Manager Email",
-              "displayName": "Hiring Manager Email",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
+              "removed": false
             },
             {
               "id": "Applicant Name",
@@ -524,7 +505,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Applicant Email",
@@ -533,7 +515,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Application Date",
@@ -542,7 +525,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Final Score",
@@ -551,7 +535,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "AI Status",
@@ -560,7 +545,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "AI Assessment",
@@ -569,7 +555,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Total Experience",
@@ -598,7 +585,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Skills",
@@ -607,7 +595,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Applicant Location",
@@ -616,7 +605,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Applicant Phone",
@@ -625,7 +615,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Applicant Education",
@@ -634,7 +625,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -835,32 +827,6 @@
           "name": "Google Sheets account"
         }
       }
-    },
-    {
-      "parameters": {
-        "sendTo": "shahanwaheed43@gmail.com",
-        "subject": "Congratulations, your  profile is shortlisted.",
-        "message": "=Hello, {{ $('Merge').item.json.output.full_name }}! \nYour profile has been shortlisted for our Full-Stack Developer profile.\nPlease share some slots next week so that we can have a short 15 minutes connect.\nRegards,\nHR Team",
-        "options": {
-          "appendAttribution": false,
-          "senderName": "Shahan Waheed"
-        }
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        3360,
-        -80
-      ],
-      "id": "1d84f5cf-0ec9-4b03-932a-dcef9c0f5845",
-      "name": "Send a message",
-      "webhookId": "7b974776-9fba-4f85-a6f3-ed0b8cbc025b",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "kc2D4YCD9vZYxogR",
-          "name": "Gmail OAuth2 API"
-        }
-      }
     }
   ],
   "pinData": {},
@@ -1048,11 +1014,6 @@
             "node": "Log Applicants Evaluation",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Send a message",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -1107,7 +1068,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "829f0907-b49e-4cb9-9cd6-c95e3676e8b0",
+  "versionId": "9d1120a4-b183-43b7-8e59-90ece773b116",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "cdcc41f8ede1c96b7e5e1a8fa207ee883a46d6b9d3685d20071fa774d4864ebd"

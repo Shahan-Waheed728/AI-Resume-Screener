@@ -9,13 +9,13 @@ An end-to-end **AI-powered recruitment system** that screens resumes, ranks cand
 ### 🔹 Pipeline 1 — ML Screening
 
 <p align="center">
-  <img src="images/ML Screening.png" width="500"/>
+  <img src="images/ML Screening.png" width="350"/>
 </p>
 
 ### 🔹 Pipeline 2 — AI Workflow (n8n)
 
 <p align="center">
-  <img src="images/AI-Workflow(n8n).png" width="500"/>
+  <img src="images/AI-Workflow(n8n).png" width="350"/>
 </p>
 
 ---

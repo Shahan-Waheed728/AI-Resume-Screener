@@ -75,7 +75,7 @@ SAMPLE_JDS = {
  
     "Finance Analyst (Expected: CONSIDERATION)": """We are hiring a Senior Finance Analyst with strong background in financial analysis, budgeting, forecasting, and financial reporting. The candidate must have expertise in IFRS standards, auditing, taxation, and ERP systems like SAP. Experience with accounts payable receivable, cost accounting, risk management, and preparing board-level financial presentations is required. CA or CMA qualification preferred with minimum 4 years of experience in finance or accounting role.""",
  
-    "Chef Position (Expected: REJECT)": """We are looking for a Head Chef with culinary arts degree and 5 years experience in Pakistani, Continental and Italian cuisine, menu planning, kitchen management, food safety regulations, team leadership, and banquet management. HACCP certification required. Experience in high-volume restaurant environment essential.""",
+    "Chef Position (Expected: REJECT)": """We are looking for a Senior Software Engineer with 5+ years of experience in Python, machine learning, TensorFlow, and cloud deployment. Must have strong knowledge of REST APIs, microservices architecture, Docker, Kubernetes, and AWS. Experience with NLP, deep learning, and data engineering pipelines required. Bachelor's degree in Computer Science or Software Engineering mandatory.""",
 }
  
 # ---------------------------
